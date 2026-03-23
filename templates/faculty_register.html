@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student feedback System | Faculty Register</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body class="auth-body">
+    <div class="auth-container">
+        <div class="auth-left faculty-gradient">
+            <div class="auth-overlay">
+                <i class="fa-solid fa-user-tie auth-big-icon"></i>
+                <h1>Faculty Registration</h1>
+                <p>Create your faculty account and start managing student feedback effectively.</p>
+            </div>
+        </div>
+
+        <div class="auth-right">
+            <div class="auth-form-box">
+                <h2>Create Faculty Account</h2>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                  {% if messages %}
+                    {% for category, message in messages %}
+                      <div class="alert {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                  {% endif %}
+                {% endwith %}
+
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="input-group">
+                        <label>Faculty Name</label>
+                        <input type="text" name="name" placeholder="Enter faculty name" required>
+                    </div>
+
+                   <div class="input-group">
+    <label>Department</label>
+    <select name="department" required>
+        <option value="">-- Select Department --</option>
+        <option value="CSE">CSE</option>
+        <option value="Electrical">Electrical</option>
+        <option value="Mechanical">Mechanical</option>
+        <option value="Civil">Civil</option>
+        <option value="ECE">ECE</option>
+        <option value="Other">Other</option>
+    </select>
+</div>
+
+                    <div class="input-group">
+                        <label>Email</label>
+                        <input type="email" name="email" placeholder="Enter faculty email" required>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Password</label>
+                        <input type="password" name="password" placeholder="Enter password" required>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Profile Photo</label>
+                        <input type="file" name="profile_photo" accept="image/*">
+                    </div>
+
+                    <button type="submit" class="btn full-btn">Register</button>
+                </form>
+
+                <p class="switch-link">Already registered? <a href="{{ url_for('faculty_login') }}">Login</a></p>
+                <p class="switch-link"><a href="{{ url_for('home') }}">Back to Home</a></p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

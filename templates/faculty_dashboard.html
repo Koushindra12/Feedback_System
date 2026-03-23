@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student feedback System | Faculty Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body class="dashboard-body">
+    <div class="dashboard-layout">
+        <aside class="sidebar faculty-sidebar">
+            <div class="sidebar-brand">
+                <i class="fa-solid fa-comments"></i>
+                <span>Student feedback System</span>
+            </div>
+
+            <div class="sidebar-user">
+                <div class="avatar faculty-avatar">
+                    {% if faculty.profile_photo %}
+                        <img src="{{ url_for('static', filename=faculty.profile_photo) }}" alt="Faculty Photo" class="profile-photo">
+                    {% else %}
+                        <i class="fa-solid fa-chalkboard-user"></i>
+                    {% endif %}
+                </div>
+                <h3>{{ faculty.name }}</h3>
+                <p>{{ faculty.email }}</p>
+                <span class="dept-badge">{{ faculty.department }}</span>
+            </div>
+
+            <nav class="sidebar-menu">
+                <a href="#"><i class="fa-solid fa-house"></i> Dashboard</a>
+                <a href="#"><i class="fa-solid fa-inbox"></i> Received Feedback</a>
+                <a href="{{ url_for('logout') }}"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="dashboard-header">
+                <div>
+                    <h1>Welcome, {{ faculty.name }} 👋</h1>
+                    <p>Review student feedback and send clear responses from your faculty dashboard.</p>
+                </div>
+                  <!-- Dark Mode Toggle -->
+    <button id="themeToggle" class="theme-btn">
+        🌙 Dark Mode
+    </button>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="alert {{ category }}">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+{% if notifications %}
+<div class="notification-box">
+    {% for n in notifications %}
+    <div class="notification-item">
+        🔔 New feedback received from <strong>{{ n.student_name }}</strong> ({{ n.roll_no }})
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <i class="fa-solid fa-inbox"></i>
+                    <div>
+                        <h3>{{ feedbacks|length }}</h3>
+                        <p>Total Feedback</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <i class="fa-solid fa-reply"></i>
+                    <div>
+                       <h3>{{ feedbacks|selectattr('faculty_response')|list|length }}</h3>
+                        <p>Responded</p>
+                    </div>
+                </div>
+            </div>
+
+            <section class="panel full-panel">
+    <div class="panel-header">
+        <h2><i class="fa-solid fa-envelope-open-text"></i> Received Feedback</h2>
+        <a href="{{ url_for('export_feedback_csv') }}" class="btn">Download Feedback</a>
+    </div>
+
+                {% if feedbacks %}
+                    {% for fb in feedbacks %}
+                    <div class="feedback-card faculty-card">
+                        <div class="feedback-top">
+                            <div>
+                                <h3>Student: {{ fb.student_name }}</h3>
+                                <p class="small-text">Roll No: {{ fb.roll_no }}</p>
+                            </div>
+                            {% if fb.faculty_response %}
+                                <span class="status replied">Replied</span>
+                            {% else %}
+                                <span class="status pending">Pending</span>
+                            {% endif %}
+                        </div>
+
+                        <p><strong>Rating:</strong> {{ fb.rating }} / 5</p>
+                        <p><strong>Comment:</strong> {{ fb.comment }}</p>
+
+                        {% if fb.image_path %}
+                        <div class="feedback-image-box">
+                            <p><strong>Uploaded Screenshot:</strong></p>
+                            <img src="{{ url_for('static', filename=fb.image_path) }}" alt="Feedback Screenshot" class="feedback-image">
+                        </div>
+                        {% endif %}
+
+                        <div class="response-box">
+                            <strong>Current Response:</strong><br>
+                            {% if fb.faculty_response %}
+                                {{ fb.faculty_response }}
+                            {% else %}
+                                <span class="muted-text">No response sent yet</span>
+                            {% endif %}
+                        </div>
+
+                        <form method="POST" class="reply-form">
+                            <input type="hidden" name="feedback_id" value="{{ fb._id }}">
+                            <textarea name="response" placeholder="Write your response here..." required></textarea>
+                            <button type="submit" class="btn">Send Response</button>
+                        </form>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-box">
+                        <i class="fa-regular fa-folder-open"></i>
+                        <p>No feedback received yet.</p>
+                    </div>
+                {% endif %}
+            </section>
+        </main>
+    </div>
+</body>
+</html>

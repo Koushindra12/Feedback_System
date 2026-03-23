@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student feedback System | Student Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body class="dashboard-body">
+    <div class="dashboard-layout">
+        <aside class="sidebar student-sidebar">
+            <div class="sidebar-brand">
+                <i class="fa-solid fa-comments"></i>
+                <span>Student feedback System</span>
+            </div>
+
+            <div class="sidebar-user">
+                <div class="avatar student-avatar">
+                    {% if student.profile_photo %}
+                        <img src="{{ url_for('static', filename=student.profile_photo) }}" alt="Student Photo" class="profile-photo">
+                    {% else %}
+                        <i class="fa-solid fa-user-graduate"></i>
+                    {% endif %}
+                </div>
+                <h3>{{ student.name }}</h3>
+                <p>{{ student.roll_no }}</p>
+                <span class="dept-badge">{{ student.department }}</span>
+            </div>
+
+            <nav class="sidebar-menu">
+                <a href="#"><i class="fa-solid fa-house"></i> Dashboard</a>
+                <a href="#"><i class="fa-solid fa-pen-to-square"></i> Give Feedback</a>
+                <a href="#"><i class="fa-solid fa-clock-rotate-left"></i> My Feedback</a>
+                <a href="{{ url_for('logout') }}"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+           <div class="dashboard-header">
+    <div>
+        <h1>Welcome, {{ student.name }} 👋</h1>
+        <p>Submit your feedback for your department faculty and check their responses.</p>
+    </div>
+
+    <!-- Dark Mode Toggle -->
+    <button id="themeToggle" class="theme-btn">
+        🌙 Dark Mode
+    </button>
+</div>
+
+           {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="alert {{ category }}">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+{% if notifications %}
+<div class="notification-box">
+    {% for n in notifications %}
+    <div class="notification-item">
+        🔔 New response received from <strong>{{ n.faculty_name }}</strong>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <i class="fa-solid fa-paper-plane"></i>
+                    <div>
+                        <h3>{{ feedbacks|length }}</h3>
+                        <p>Submitted Feedback</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <i class="fa-solid fa-reply"></i>
+                    <div>
+                        <h3{{ feedbacks|selectattr('faculty_response')|list|length }}</h3>
+                        <p>Total Responses</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-grid">
+                <section class="panel">
+                    <div class="panel-header">
+                        <h2><i class="fa-solid fa-pen"></i> Give Feedback</h2>
+                    </div>
+
+                    <form method="POST" enctype="multipart/form-data">
+                        <div class="input-group">
+                            <label>Select Faculty</label>
+                            <select name="faculty_id" required>
+                                <option value="">-- Select Faculty --</option>
+                                {% for f in faculty_list %}
+                                <option value="{{ f._id }}">{{ f.name }} ({{ f.department }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="input-group">
+                            <label>Rating</label>
+                            <div class="star-rating">
+                                <input type="radio" id="star5" name="rating" value="5" required>
+                                <label for="star5">★</label>
+
+                                <input type="radio" id="star4" name="rating" value="4">
+                                <label for="star4">★</label>
+
+                                <input type="radio" id="star3" name="rating" value="3">
+                                <label for="star3">★</label>
+
+                                <input type="radio" id="star2" name="rating" value="2">
+                                <label for="star2">★</label>
+
+                                <input type="radio" id="star1" name="rating" value="1">
+                                <label for="star1">★</label>
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label>Comment</label>
+                            <textarea name="comment" placeholder="Write your feedback here..." required></textarea>
+                        </div>
+
+                        <div class="input-group">
+                            <label>Upload Screenshot (Optional)</label>
+                            <input type="file" name="feedback_image" accept="image/*">
+                        </div>
+
+                        <button type="submit" class="btn full-btn">Submit Feedback</button>
+                    </form>
+                </section>
+
+                <section class="panel">
+                    <div class="panel-header">
+                        <h2><i class="fa-solid fa-message"></i> My Feedback History</h2>
+                    </div>
+
+                    {% if feedbacks %}
+                        {% for fb in feedbacks %}
+                        <div class="feedback-card">
+                            <div class="feedback-top">
+                                <h3>{{ fb.faculty_name }}</h3>
+                                {% if fb.faculty_response %}
+                                    <span class="status replied">Replied</span>
+                                {% else %}
+                                    <span class="status pending">Pending</span>
+                                {% endif %}
+                            </div>
+
+                            <p><strong>Rating:</strong> {{ fb.rating }} / 5</p>
+                            <p><strong>Comment:</strong> {{ fb.comment }}</p>
+
+                            {% if fb.image_path %}
+                            <div class="feedback-image-box">
+                                <p><strong>Uploaded Screenshot:</strong></p>
+                                <img src="{{ url_for('static', filename=fb.image_path) }}" alt="Feedback Screenshot" class="feedback-image">
+                            </div>
+                            {% endif %}
+
+                            <div class="response-box">
+                                <strong>Faculty Response:</strong><br>
+                                {% if fb.faculty_response %}
+                                    {{ fb.faculty_response }}
+                                {% else %}
+                                    <span class="muted-text">No response yet</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-box">
+                            <i class="fa-regular fa-folder-open"></i>
+                            <p>No feedback submitted yet.</p>
+                        </div>
+                    {% endif %}
+                </section>
+            </div>
+        </main>
+    </div>
+</body>
+<script>
+
+const toggleBtn = document.getElementById("themeToggle")
+
+toggleBtn.addEventListener("click", () => {
+
+    document.body.classList.toggle("dark-mode")
+
+    if(document.body.classList.contains("dark-mode")){
+        toggleBtn.innerText="☀ Light Mode"
+        localStorage.setItem("theme","dark")
+    }
+    else{
+        toggleBtn.innerText="🌙 Dark Mode"
+        localStorage.setItem("theme","light")
+    }
+
+})
+
+/* Save theme */
+
+if(localStorage.getItem("theme")==="dark"){
+    document.body.classList.add("dark-mode")
+    toggleBtn.innerText="☀ Light Mode"
+}
+
+</script>
+</html>
