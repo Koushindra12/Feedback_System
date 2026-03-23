@@ -2,3 +2,4 @@ Flask
 pymongo
 Werkzeug
 gunicorn
+python-dotenv
