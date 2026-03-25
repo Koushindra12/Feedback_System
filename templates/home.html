@@ -60,7 +60,18 @@
     </div>
 </body>
 <script>
+function togglePassword() {
+    const passwordInput = document.getElementById("password");
+    const icon = document.querySelector(".toggle-password");
 
+    if (passwordInput.type === "password") {
+        passwordInput.type = "text";
+        icon.innerText = "🙈";
+    } else {
+        passwordInput.type = "password";
+        icon.innerText = "👁";
+    }
+}
 const toggleBtn = document.getElementById("themeToggle")
 
 toggleBtn.addEventListener("click", () => {
