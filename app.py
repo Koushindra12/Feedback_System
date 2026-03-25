@@ -11,7 +11,7 @@ from io import StringIO
 
 load_dotenv()
 
-app = Flask(__name__)
+app = Flask(__name__) 
 app.secret_key = os.getenv("SECRET_KEY", "super_secret_key_change_this")
 
 # Upload config
