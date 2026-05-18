@@ -1,143 +1,433 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student feedback System | Faculty Dashboard</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Faculty Dashboard — Review student feedback, respond professionally, and download feedback reports.">
+  <title>Student Feedback System | Faculty Dashboard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body class="dashboard-body">
-    <div class="dashboard-layout">
-        <aside class="sidebar faculty-sidebar">
-            <div class="sidebar-brand">
-                <i class="fa-solid fa-comments"></i>
-                <span>Student feedback System</span>
+
+  <!-- Mobile toggle -->
+  <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
+    <i class="fa-solid fa-bars"></i>
+  </button>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- Dark mode -->
+  <button id="themeToggle" class="theme-btn" aria-label="Toggle dark mode">
+    <i class="fa-solid fa-moon" id="themeIcon"></i>
+    <span id="themeLabel">Dark</span>
+  </button>
+
+  <div class="dashboard-layout">
+
+    <!-- ════════════  SIDEBAR  ════════════ -->
+    <aside class="sidebar faculty-sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <i class="fa-solid fa-comments"></i>
+        <span>Feedback System</span>
+      </div>
+
+      <div class="sidebar-user">
+        <div class="avatar faculty-avatar">
+          {% if faculty.profile_photo %}
+            <img src="{{ url_for('static', filename=faculty.profile_photo) }}"
+                 alt="{{ faculty.name }}'s photo" class="profile-photo">
+          {% else %}
+            <i class="fa-solid fa-chalkboard-user"></i>
+          {% endif %}
+        </div>
+        <h3>{{ faculty.name }}</h3>
+        <p>{{ faculty.email }}</p>
+        <span class="dept-badge">{{ faculty.department }}</span>
+      </div>
+
+      <nav class="sidebar-menu">
+        <a href="#overview" class="active" id="nav-overview">
+          <i class="fa-solid fa-house"></i> Overview
+        </a>
+        <a href="#feedback-section" id="nav-feedback">
+          <i class="fa-solid fa-inbox"></i> Received Feedback
+          {% if feedbacks %}
+          <span class="sidebar-badge">{{ feedbacks|length }}</span>
+          {% endif %}
+        </a>
+        <a href="#public-feedback-section" id="nav-public-feedback">
+          <i class="fa-solid fa-comment-dots"></i> Public Feedback
+          {% if public_feedbacks %}
+          <span class="sidebar-badge">{{ public_feedbacks|length }}</span>
+          {% endif %}
+        </a>
+        <a href="{{ url_for('export_feedback_report') }}" target="_blank" id="nav-report">
+          <i class="fa-solid fa-file-pdf"></i> Download PDF
+        </a>
+        <a href="{{ url_for('logout') }}" class="logout-link" id="nav-logout">
+          <i class="fa-solid fa-right-from-bracket"></i> Logout
+        </a>
+      </nav>
+    </aside>
+
+    <!-- ════════════  MAIN  ════════════ -->
+    <main class="main-content">
+
+      <div class="dashboard-header" id="overview">
+        <div>
+          <h1>Welcome, {{ faculty.name }} <i class="fa-solid fa-hand-wave" style="font-size:22px;color:#f59e0b;"></i></h1>
+          <p>Review student feedback, respond professionally, and track your engagement.</p>
+        </div>
+        <div class="header-actions">
+          <a href="{{ url_for('export_feedback_report') }}" target="_blank" class="btn btn-download" id="download-pdf-btn">
+            <i class="fa-solid fa-file-pdf"></i> Download PDF
+          </a>
+        </div>
+      </div>
+
+      <!-- Flash messages -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert {{ category }}" role="alert">
+              <span>{{ message }}</span>
+              <button class="alert-close" onclick="this.parentElement.remove()" aria-label="Close">&times;</button>
             </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
 
-            <div class="sidebar-user">
-                <div class="avatar faculty-avatar">
-                    {% if faculty.profile_photo %}
-                        <img src="{{ url_for('static', filename=faculty.profile_photo) }}" alt="Faculty Photo" class="profile-photo">
-                    {% else %}
-                        <i class="fa-solid fa-chalkboard-user"></i>
-                    {% endif %}
-                </div>
-                <h3>{{ faculty.name }}</h3>
-                <p>{{ faculty.email }}</p>
-                <span class="dept-badge">{{ faculty.department }}</span>
-            </div>
+      <!-- Notifications -->
+      {% if notifications %}
+      <div class="notification-box">
+        <div class="notification-header">
+          <i class="fa-solid fa-bell-ring"></i>
+          <strong>{{ notifications|length }} New Feedback{{ 's' if notifications|length > 1 else '' }}</strong>
+        </div>
+        {% for n in notifications %}
+        <div class="notification-item">
+          <i class="fa-solid fa-bell"></i>
+          New feedback from <strong>{{ n.student_name }}</strong>
+          <span style="opacity:.7;">({{ n.roll_no }})</span>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
 
-            <nav class="sidebar-menu">
-                <a href="#"><i class="fa-solid fa-house"></i> Dashboard</a>
-                <a href="#"><i class="fa-solid fa-inbox"></i> Received Feedback</a>
-                <a href="{{ url_for('logout') }}"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
-            </nav>
-        </aside>
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card" style="--delay:0s">
+          <div class="stat-icon purple"><i class="fa-solid fa-inbox"></i></div>
+          <div>
+            <h3>{{ feedbacks|length }}</h3>
+            <p>Total Feedback</p>
+          </div>
+        </div>
+        <div class="stat-card" style="--delay:0.07s">
+          <div class="stat-icon green"><i class="fa-solid fa-reply"></i></div>
+          <div>
+            <h3>{{ feedbacks|selectattr('faculty_response')|list|length }}</h3>
+            <p>Responded</p>
+          </div>
+        </div>
+        <div class="stat-card" style="--delay:0.14s">
+          <div class="stat-icon orange"><i class="fa-solid fa-hourglass-half"></i></div>
+          <div>
+            <h3>{{ feedbacks|rejectattr('faculty_response')|list|length }}</h3>
+            <p>Pending</p>
+          </div>
+        </div>
+        <div class="stat-card" style="--delay:0.21s">
+          <div class="stat-icon blue"><i class="fa-solid fa-comment-dots"></i></div>
+          <div>
+            <h3>{{ public_feedbacks|length }}</h3>
+            <p>Public Feedback</p>
+          </div>
+        </div>
+      </div>
 
-        <main class="main-content">
-            <div class="dashboard-header">
+      <!-- Progress bar for response rate -->
+      {% if feedbacks %}
+      {% set responded = feedbacks|selectattr('faculty_response')|list|length %}
+      {% set total = feedbacks|length %}
+      {% set rate = ((responded / total) * 100)|int if total > 0 else 0 %}
+      <div class="progress-bar-section">
+        <div class="progress-bar-label">
+          <span><i class="fa-solid fa-chart-line"></i> Response Progress</span>
+          <span>{{ responded }}/{{ total }} Responded</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" style="--progress: {{ rate }}%;"></div>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- ════ Received Student Feedback Panel ════ -->
+      <section class="full-panel" id="feedback-section">
+        <div class="panel-header">
+          <h2><i class="fa-solid fa-envelope-open-text"></i> Student Feedback</h2>
+        </div>
+
+        <!-- Category + Status filter -->
+        {% if feedbacks %}
+        <div class="filter-bar">
+          <label style="margin:0;font-size:13px;color:var(--text-muted);font-weight:500;text-transform:none;">
+            <i class="fa-solid fa-filter" style="margin-right:4px;"></i> Filter:
+          </label>
+          <select id="categoryFilter" onchange="filterCards()">
+            <option value="all">All Categories</option>
+            <option value="Teaching Quality">Teaching Quality</option>
+            <option value="Communication Skills">Communication Skills</option>
+            <option value="Behaviour & Attitude">Behaviour &amp; Attitude</option>
+            <option value="Punctuality">Punctuality</option>
+            <option value="Assignment & Assessment">Assignment &amp; Assessment</option>
+            <option value="Classroom Management">Classroom Management</option>
+            <option value="Knowledge & Expertise">Knowledge &amp; Expertise</option>
+            <option value="Other">Other</option>
+          </select>
+          <select id="statusFilter" onchange="filterCards()">
+            <option value="all">All Status</option>
+            <option value="pending">Pending</option>
+            <option value="replied">Replied</option>
+          </select>
+          <span class="filter-count" id="filterCount">{{ feedbacks|length }} shown</span>
+        </div>
+        {% endif %}
+
+        <div id="feedbackList">
+        {% if feedbacks %}
+          {% for fb in feedbacks %}
+          <div class="feedback-card faculty-card"
+               data-category="{{ fb.category }}"
+               data-status="{{ 'replied' if fb.faculty_response else 'pending' }}">
+            <div class="feedback-top">
+              <div class="feedback-student-info">
+                <div class="student-avatar-mini">{{ fb.student_name[0]|upper }}</div>
                 <div>
-                    <h1>Welcome, {{ faculty.name }} 👋</h1>
-                    <p>Review student feedback and send clear responses from your faculty dashboard.</p>
+                  <h3>{{ fb.student_name }}</h3>
+                  <p class="small-text">
+                    <i class="fa-solid fa-id-card" style="margin-right:4px;"></i>Roll No: {{ fb.roll_no }}
+                    {% if fb.date %}
+                    &nbsp;&bull;&nbsp; {{ fb.date.strftime('%d %b %Y, %H:%M') }}
+                    {% endif %}
+                  </p>
                 </div>
-                  <!-- Dark Mode Toggle -->
-    <button id="themeToggle" class="theme-btn">
-        🌙 Dark Mode
-    </button>
+              </div>
+              {% if fb.faculty_response %}
+                <span class="status replied"><i class="fa-solid fa-check" style="margin-right:4px;"></i>Replied</span>
+              {% else %}
+                <span class="status pending"><i class="fa-solid fa-clock" style="margin-right:4px;"></i>Pending</span>
+              {% endif %}
             </div>
 
-            {% with messages = get_flashed_messages(with_categories=true) %}
-  {% if messages %}
-    {% for category, message in messages %}
-      <div class="alert {{ category }}">{{ message }}</div>
-    {% endfor %}
-  {% endif %}
-{% endwith %}
+            {% if fb.category %}
+            <div class="category-pill">
+              <i class="fa-solid fa-tag"></i> {{ fb.category }}
+            </div>
+            {% endif %}
 
-{% if notifications %}
-<div class="notification-box">
-    {% for n in notifications %}
-    <div class="notification-item">
-        🔔 New feedback received from <strong>{{ n.student_name }}</strong> ({{ n.roll_no }})
-    </div>
-    {% endfor %}
-</div>
-{% endif %}
+            <p style="font-size:14.5px;color:var(--text-soft);margin-bottom:12px;line-height:1.6;">{{ fb.comment }}</p>
 
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <i class="fa-solid fa-inbox"></i>
-                    <div>
-                        <h3>{{ feedbacks|length }}</h3>
-                        <p>Total Feedback</p>
-                    </div>
-                </div>
+            {% if fb.image_path %}
+            <div class="feedback-image-box">
+              <p style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:4px;">Attached Screenshot</p>
+              <img src="{{ url_for('static', filename=fb.image_path) }}"
+                   alt="Feedback screenshot" class="feedback-image">
+            </div>
+            {% endif %}
 
-                <div class="stat-card">
-                    <i class="fa-solid fa-reply"></i>
-                    <div>
-                       <h3>{{ feedbacks|selectattr('faculty_response')|list|length }}</h3>
-                        <p>Responded</p>
-                    </div>
-                </div>
+            <div class="response-box" style="margin-bottom:14px;">
+              <strong style="font-size:12.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);">
+                Current Response
+              </strong><br>
+              {% if fb.faculty_response %}
+                <span style="font-size:14px;">{{ fb.faculty_response }}</span>
+              {% else %}
+                <span class="muted-text">No response sent yet.</span>
+              {% endif %}
             </div>
 
-            <section class="panel full-panel">
-    <div class="panel-header">
-        <h2><i class="fa-solid fa-envelope-open-text"></i> Received Feedback</h2>
-        <a href="{{ url_for('export_feedback_csv') }}" class="btn">Download Feedback</a>
-    </div>
+            <form method="POST" class="reply-form" id="reply-form-{{ fb._id }}">
+              <input type="hidden" name="feedback_id" value="{{ fb._id }}">
+              <div class="input-group" style="margin-bottom:10px;">
+                <textarea name="response" rows="3"
+                          placeholder="Write your response here…" required></textarea>
+              </div>
+              <button type="submit" class="btn" style="padding:10px 18px;font-size:13.5px;">
+                <i class="fa-solid fa-reply"></i> Send Response
+              </button>
+            </form>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="empty-box">
+            <i class="fa-regular fa-folder-open"></i>
+            <p>No student feedback received yet.<br>Students will send feedback once registered.</p>
+          </div>
+        {% endif %}
+        </div>
+      </section>
 
-                {% if feedbacks %}
-                    {% for fb in feedbacks %}
-                    <div class="feedback-card faculty-card">
-                        <div class="feedback-top">
-                            <div>
-                                <h3>Student: {{ fb.student_name }}</h3>
-                                <p class="small-text">Roll No: {{ fb.roll_no }}</p>
-                            </div>
-                            {% if fb.faculty_response %}
-                                <span class="status replied">Replied</span>
-                            {% else %}
-                                <span class="status pending">Pending</span>
-                            {% endif %}
-                        </div>
+      <!-- ════ Public / Anonymous Feedback Section ════ -->
+      <section class="full-panel" id="public-feedback-section" style="margin-top:24px;">
+        <div class="panel-header">
+          <h2><i class="fa-solid fa-comments"></i> Public Feedback</h2>
+          <span class="dept-badge" style="background:rgba(79,70,229,.12);color:var(--primary);">
+            Anyone can submit
+          </span>
+        </div>
 
-                        <p><strong>Rating:</strong> {{ fb.rating }} / 5</p>
-                        <p><strong>Comment:</strong> {{ fb.comment }}</p>
+        <!-- Submit public feedback form -->
+        <div class="public-feedback-form-wrap">
+          <p style="font-size:14px;color:var(--text-muted);margin-bottom:18px;">
+            <i class="fa-solid fa-circle-info" style="color:var(--primary);margin-right:6px;"></i>
+            This form allows anyone (students, colleagues, or visitors) to leave a quick comment — no login required.
+          </p>
+          <form method="POST" action="{{ url_for('submit_public_feedback', faculty_id=faculty._id) }}"
+                id="public-feedback-form">
+            <div class="input-group">
+              <label for="pub_name">Your Name <span class="optional-label">(Optional)</span></label>
+              <input type="text" id="pub_name" name="pub_name"
+                     placeholder="e.g. Rahul Sharma (leave blank to be anonymous)"
+                     maxlength="80">
+            </div>
+            <div class="input-group">
+              <label for="pub_comment">Feedback Message <span style="color:var(--error);font-size:11px;">*required</span></label>
+              <textarea id="pub_comment" name="pub_comment" rows="4"
+                        placeholder="Share your thoughts about this faculty member…"
+                        required maxlength="600"></textarea>
+              <div class="char-count"><span id="pubCharCount">0</span>/600 characters</div>
+            </div>
+            <button type="submit" class="btn" id="pub-submit-btn" style="min-width:180px;">
+              <i class="fa-solid fa-paper-plane"></i> Submit Feedback
+            </button>
+          </form>
+        </div>
 
-                        {% if fb.image_path %}
-                        <div class="feedback-image-box">
-                            <p><strong>Uploaded Screenshot:</strong></p>
-                            <img src="{{ url_for('static', filename=fb.image_path) }}" alt="Feedback Screenshot" class="feedback-image">
-                        </div>
-                        {% endif %}
+        <!-- Display received public feedbacks -->
+        <div style="margin-top:28px;">
+          <h3 style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:16px;padding-top:16px;border-top:1px solid var(--border);">
+            <i class="fa-solid fa-list" style="color:var(--primary);margin-right:8px;"></i>Received Public Comments ({{ public_feedbacks|length }})
+          </h3>
 
-                        <div class="response-box">
-                            <strong>Current Response:</strong><br>
-                            {% if fb.faculty_response %}
-                                {{ fb.faculty_response }}
-                            {% else %}
-                                <span class="muted-text">No response sent yet</span>
-                            {% endif %}
-                        </div>
+          {% if public_feedbacks %}
+            {% for pfb in public_feedbacks %}
+            <div class="public-feedback-card">
+              <div class="public-feedback-top">
+                <div class="pub-avatar">{{ pfb.name[0]|upper }}</div>
+                <div>
+                  <strong class="pub-name">{{ pfb.name }}</strong>
+                  <p class="small-text">{{ pfb.date_str }}</p>
+                </div>
+              </div>
+              <p class="pub-comment">{{ pfb.comment }}</p>
+            </div>
+            {% endfor %}
+          {% else %}
+            <div class="empty-box" style="padding:32px 20px;">
+              <i class="fa-regular fa-comment"></i>
+              <p>No public feedback yet.<br>Share the form link with others!</p>
+            </div>
+          {% endif %}
+        </div>
+      </section>
 
-                        <form method="POST" class="reply-form">
-                            <input type="hidden" name="feedback_id" value="{{ fb._id }}">
-                            <textarea name="response" placeholder="Write your response here..." required></textarea>
-                            <button type="submit" class="btn">Send Response</button>
-                        </form>
-                    </div>
-                    {% endfor %}
-                {% else %}
-                    <div class="empty-box">
-                        <i class="fa-regular fa-folder-open"></i>
-                        <p>No feedback received yet.</p>
-                    </div>
-                {% endif %}
-            </section>
-        </main>
-    </div>
+    </main>
+  </div>
+
+  <script>
+    // ── Dark mode ──
+    function applyTheme(dark) {
+      document.body.classList.toggle('dark-mode', dark);
+      document.getElementById('themeIcon').className = dark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+      document.getElementById('themeLabel').textContent = dark ? 'Light' : 'Dark';
+      localStorage.setItem('sgf-theme', dark ? 'dark' : 'light');
+    }
+    document.getElementById('themeToggle').addEventListener('click', () =>
+      applyTheme(!document.body.classList.contains('dark-mode')));
+    applyTheme(localStorage.getItem('sgf-theme') === 'dark');
+
+    // ── Mobile sidebar ──
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    document.getElementById('sidebarToggle').addEventListener('click', () => {
+      sidebar.classList.toggle('open');
+      overlay.classList.toggle('show');
+    });
+    overlay.addEventListener('click', () => {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('show');
+    });
+
+    // ── Smooth-scroll nav links ──
+    document.querySelectorAll('.sidebar-menu a[href^="#"]').forEach(link => {
+      link.addEventListener('click', e => {
+        e.preventDefault();
+        const target = document.querySelector(link.getAttribute('href'));
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        sidebar.classList.remove('open');
+        overlay.classList.remove('show');
+      });
+    });
+
+    // ── Dual filter (category + status) ──
+    function filterCards() {
+      const cat    = document.getElementById('categoryFilter').value;
+      const status = document.getElementById('statusFilter').value;
+      let shown = 0;
+      document.querySelectorAll('#feedbackList .feedback-card').forEach(card => {
+        const catOk    = cat === 'all' || card.dataset.category === cat;
+        const statusOk = status === 'all' || card.dataset.status === status;
+        const visible  = catOk && statusOk;
+        card.style.display = visible ? '' : 'none';
+        if (visible) shown++;
+      });
+      const countEl = document.getElementById('filterCount');
+      if (countEl) countEl.textContent = shown + ' shown';
+    }
+
+    // ── Public feedback character counter ──
+    const pubComment = document.getElementById('pub_comment');
+    const pubCharCount = document.getElementById('pubCharCount');
+    if (pubComment) {
+      pubComment.addEventListener('input', () => {
+        const len = pubComment.value.length;
+        pubCharCount.textContent = len;
+        pubCharCount.parentElement.style.color = len > 550 ? 'var(--error)' : 'var(--text-muted)';
+      });
+    }
+
+    // ── Public feedback submit loading ──
+    document.getElementById('public-feedback-form')?.addEventListener('submit', function() {
+      const btn = document.getElementById('pub-submit-btn');
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting…';
+      btn.disabled = true;
+    });
+
+    // ── Auto-dismiss flash alerts after 4s ──
+    document.querySelectorAll('.alert').forEach(alert => {
+      setTimeout(() => {
+        alert.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+        alert.style.opacity = '0';
+        alert.style.transform = 'translateY(-10px)';
+        setTimeout(() => alert.remove(), 500);
+      }, 4000);
+    });
+
+    // ── Animate stat cards ──
+    document.querySelectorAll('.stat-card').forEach((card, i) => {
+      card.style.animationDelay = card.style.getPropertyValue('--delay') || (i * 0.07) + 's';
+      card.classList.add('stat-animate');
+    });
+
+    // ── Progress bar animation ──
+    const fill = document.querySelector('.progress-fill');
+    if (fill) {
+      fill.style.width = '0%';
+      setTimeout(() => {
+        fill.style.width = fill.style.getPropertyValue('--progress');
+      }, 300);
+    }
+  </script>
 </body>
 </html>
