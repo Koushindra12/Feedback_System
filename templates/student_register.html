@@ -1,80 +1,135 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student feedback System | Student Register</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Student Registration — Create your student account on the Student Feedback System.">
+  <title>Student Feedback System | Student Register</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body class="auth-body">
-    <div class="auth-container">
-        <div class="auth-left student-gradient">
-            <div class="auth-overlay">
-                <i class="fa-solid fa-user-graduate auth-big-icon"></i>
-                <h1>Student Registration</h1>
-                <p>Create your student account to send feedback and view faculty responses.</p>
-            </div>
-        </div>
 
-        <div class="auth-right">
-            <div class="auth-form-box">
-                <h2>Create Account</h2>
+  <!-- Background blobs -->
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
 
-                {% with messages = get_flashed_messages(with_categories=true) %}
-                  {% if messages %}
-                    {% for category, message in messages %}
-                      <div class="alert {{ category }}">{{ message }}</div>
-                    {% endfor %}
-                  {% endif %}
-                {% endwith %}
+  <!-- Dark mode toggle -->
+  <button id="themeToggle" class="theme-btn" aria-label="Toggle dark mode">
+    <i class="fa-solid fa-moon" id="themeIcon"></i>
+    <span id="themeLabel">Dark</span>
+  </button>
 
-                <form method="POST" enctype="multipart/form-data">
-                    <div class="input-group">
-                        <label>Roll Number</label>
-                        <input type="text" name="roll_no" placeholder="Enter roll number" required>
-                    </div>
+  <div class="auth-container">
 
-                    <div class="input-group">
-                        <label>Full Name</label>
-                        <input type="text" name="name" placeholder="Enter full name" required>
-                    </div>
-
-                  <div class="input-group">
-    <label>Department</label>
-    <select name="department" required>
-        <option value="">-- Select Department --</option>
-        <option value="CSE">CSE</option>
-        <option value="Electrical">Electrical</option>
-        <option value="Mechanical">Mechanical</option>
-        <option value="Civil">Civil</option>
-        <option value="ECE">ECE</option>
-        <option value="Other">Other</option>
-    </select>
-</div>
-
-                    <div class="input-group">
-                        <label>Email</label>
-                        <input type="email" name="email" placeholder="Enter email" required>
-                    </div>
-
-                    <div class="input-group">
-                        <label>Password</label>
-                        <input type="password" name="password" placeholder="Enter password" required>
-                    </div>
-
-                    <div class="input-group">
-                        <label>Profile Photo</label>
-                        <input type="file" name="profile_photo" accept="image/*">
-                    </div>
-
-                    <button type="submit" class="btn full-btn">Register</button>
-                </form>
-
-                <p class="switch-link">Already registered? <a href="{{ url_for('student_login') }}">Login</a></p>
-                <p class="switch-link"><a href="{{ url_for('home') }}">Back to Home</a></p>
-            </div>
-        </div>
+    <!-- Left panel -->
+    <div class="auth-left student-gradient">
+      <div class="auth-overlay">
+        <i class="fa-solid fa-user-graduate auth-big-icon"></i>
+        <h1>Student Registration</h1>
+        <p>Create your account to submit feedback, track responses, and improve your academic experience.</p>
+      </div>
     </div>
+
+    <!-- Right form panel -->
+    <div class="auth-right">
+      <div class="auth-form-box">
+        <h2>Create Account</h2>
+        <p class="form-sub">Fill in the details below. Fields marked <strong>*</strong> are required.</p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert {{ category }}" role="alert">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <form method="POST" enctype="multipart/form-data" id="student-register-form" novalidate>
+
+          <div class="input-group">
+            <label for="roll_no">Roll Number <span style="color:var(--error)">*</span></label>
+            <input type="text" id="roll_no" name="roll_no"
+                   placeholder="e.g. CS2001" required autocomplete="off">
+          </div>
+
+          <div class="input-group">
+            <label for="name">Full Name <span style="color:var(--error)">*</span></label>
+            <input type="text" id="name" name="name"
+                   placeholder="Enter your full name" required autocomplete="name">
+          </div>
+
+          <div class="input-group">
+            <label for="department">Department <span style="color:var(--error)">*</span></label>
+            <select id="department" name="department" required>
+              <option value="">— Select Department —</option>
+              <option value="CSE">CSE</option>
+              <option value="Electrical">Electrical</option>
+              <option value="Mechanical">Mechanical</option>
+              <option value="Civil">Civil</option>
+              <option value="ECE">ECE</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div class="input-group">
+            <label for="email">Email Address <span style="color:var(--error)">*</span></label>
+            <input type="email" id="email" name="email"
+                   placeholder="your@email.com" required autocomplete="email">
+          </div>
+
+          <div class="input-group">
+            <label for="password">Password <span style="color:var(--error)">*</span></label>
+            <div class="password-wrapper">
+              <input type="password" id="password" name="password"
+                     placeholder="Create a strong password" required autocomplete="new-password" minlength="6">
+              <button type="button" class="toggle-pw" id="togglePw" aria-label="Show password">
+                <i class="fa-regular fa-eye" id="eyeIcon"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label for="profile_photo">
+              Profile Photo
+              <span class="optional-label">(Optional — you can add this later)</span>
+            </label>
+            <input type="file" id="profile_photo" name="profile_photo" accept="image/*">
+            <p class="photo-note"><i class="fa-solid fa-circle-info" style="color:var(--primary);"></i> PNG / JPG / JPEG / GIF accepted · Max 5 MB</p>
+          </div>
+
+          <button type="submit" class="btn full-btn" id="register-submit-btn">
+            <i class="fa-solid fa-user-plus"></i> Create Account
+          </button>
+        </form>
+
+        <p class="switch-link">Already registered? <a href="{{ url_for('student_login') }}" id="go-login">Login here</a></p>
+        <p class="switch-link"><a href="{{ url_for('home') }}" id="go-home"><i class="fa-solid fa-arrow-left" style="font-size:12px;"></i> Back to Home</a></p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Dark mode
+    function applyTheme(dark) {
+      document.body.classList.toggle('dark-mode', dark);
+      document.getElementById('themeIcon').className = dark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+      document.getElementById('themeLabel').textContent = dark ? 'Light' : 'Dark';
+      localStorage.setItem('sgf-theme', dark ? 'dark' : 'light');
+    }
+    document.getElementById('themeToggle').addEventListener('click', () => {
+      applyTheme(!document.body.classList.contains('dark-mode'));
+    });
+    applyTheme(localStorage.getItem('sgf-theme') === 'dark');
+
+    // Show / hide password
+    const pwInput = document.getElementById('password');
+    const eyeIcon = document.getElementById('eyeIcon');
+    document.getElementById('togglePw').addEventListener('click', () => {
+      const isHidden = pwInput.type === 'password';
+      pwInput.type = isHidden ? 'text' : 'password';
+      eyeIcon.className = isHidden ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye';
+    });
+  </script>
 </body>
 </html>
