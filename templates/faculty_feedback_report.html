@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Feedback Report — {{ faculty.name }}</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+  <style>
+    /* ── Base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', Arial, sans-serif;
+      background: #f0f4ff;
+      color: #1e293b;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .page-wrapper {
+      max-width: 960px;
+      margin: 32px auto;
+      background: #ffffff;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 8px 40px rgba(15,23,42,.12);
+    }
+
+    /* ── Report Header ── */
+    .report-header {
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+      color: #fff;
+      padding: 36px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .report-title {
+      font-size: 26px;
+      font-weight: 800;
+      margin-bottom: 6px;
+      letter-spacing: -0.3px;
+    }
+    .report-subtitle {
+      font-size: 14px;
+      opacity: 0.85;
+    }
+    .report-meta {
+      text-align: right;
+      font-size: 13px;
+      opacity: 0.85;
+      line-height: 1.7;
+    }
+    .report-meta strong { display: block; font-size: 15px; font-weight: 700; opacity: 1; }
+
+    /* ── Summary row ── */
+    .summary-row {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .summary-item {
+      flex: 1;
+      padding: 20px 28px;
+      border-right: 1px solid #e2e8f0;
+      text-align: center;
+    }
+    .summary-item:last-child { border-right: none; }
+    .summary-num {
+      font-size: 28px;
+      font-weight: 800;
+      color: #4f46e5;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .summary-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* ── Table ── */
+    .table-wrap { padding: 28px 40px 36px; }
+    .section-label {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #64748b;
+      margin-bottom: 14px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+    }
+    thead tr {
+      background: #4f46e5;
+      color: #fff;
+    }
+    thead th {
+      padding: 12px 14px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+    }
+    tbody tr { border-bottom: 1px solid #e2e8f0; }
+    tbody tr:nth-child(even) { background: #f8faff; }
+    tbody tr:hover { background: #f0f4ff; }
+    tbody td {
+      padding: 12px 14px;
+      color: #334155;
+      vertical-align: top;
+    }
+    tbody td:first-child { font-weight: 600; color: #1e293b; }
+
+    /* Status badge in table */
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .badge-responded { background: #d1fae5; color: #065f46; }
+    .badge-pending   { background: #fef3c7; color: #92400e; }
+
+    /* Category badge */
+    .cat-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 9999px;
+      background: rgba(79,70,229,.1);
+      color: #4f46e5;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    /* ── Footer note ── */
+    .report-footer {
+      padding: 18px 40px;
+      border-top: 1px solid #e2e8f0;
+      font-size: 12px;
+      color: #94a3b8;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    /* ── Print button ── */
+    .print-bar {
+      text-align: center;
+      padding: 24px;
+      background: #f8faff;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .print-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 28px;
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      box-shadow: 0 6px 18px rgba(79,70,229,.28);
+      transition: transform .2s, box-shadow .2s;
+    }
+    .print-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(79,70,229,.35); }
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 28px;
+      background: transparent;
+      color: #4f46e5;
+      border: 1.5px solid #a5b4fc;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      text-decoration: none;
+      transition: background .2s;
+    }
+    .back-btn:hover { background: rgba(79,70,229,.06); }
+
+    /* ── Print media ── */
+    @media print {
+      body { background: #fff; font-size: 12px; }
+      .page-wrapper { box-shadow: none; border-radius: 0; margin: 0; }
+      .print-bar { display: none; }
+      thead tr { background: #4f46e5 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .report-header { background: linear-gradient(135deg, #4f46e5, #7c3aed) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      tbody tr:nth-child(even) { background: #f8faff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      @page { margin: 18mm; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="page-wrapper">
+
+    <!-- Header -->
+    <div class="report-header">
+      <div>
+        <div class="report-title">Student Feedback Report</div>
+        <div class="report-subtitle">{{ faculty.name }} &nbsp;·&nbsp; {{ faculty.department }}</div>
+      </div>
+      <div class="report-meta">
+        <strong>Generated On</strong>
+        {{ today }}
+      </div>
+    </div>
+
+    <!-- Summary row -->
+    <div class="summary-row">
+      <div class="summary-item">
+        <div class="summary-num">{{ feedbacks|length }}</div>
+        <div class="summary-label">Total Feedback</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-num" style="color:#059669;">{{ feedbacks|selectattr('faculty_response')|list|length }}</div>
+        <div class="summary-label">Responded</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-num" style="color:#ea580c;">{{ feedbacks|rejectattr('faculty_response')|list|length }}</div>
+        <div class="summary-label">Pending</div>
+      </div>
+      <div class="summary-item">
+        {% set responded = feedbacks|selectattr('faculty_response')|list|length %}
+        {% set total = feedbacks|length %}
+        <div class="summary-num" style="color:#7c3aed;">{{ ((responded / total * 100)|int if total > 0 else 0) }}%</div>
+        <div class="summary-label">Response Rate</div>
+      </div>
+    </div>
+
+    <!-- Feedback table -->
+    <div class="table-wrap">
+      <div class="section-label">Detailed Feedback Records</div>
+
+      {% if feedbacks %}
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Student Name</th>
+            <th>Roll No</th>
+            <th>Category</th>
+            <th>Feedback Comment</th>
+            <th>Status</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for fb in feedbacks %}
+          <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ fb.student_name }}</td>
+            <td>{{ fb.roll_no }}</td>
+            <td><span class="cat-badge">{{ fb.category }}</span></td>
+            <td>{{ fb.comment }}</td>
+            <td>
+              {% if fb.faculty_response %}
+                <span class="badge badge-responded">Responded</span>
+              {% else %}
+                <span class="badge badge-pending">Pending</span>
+              {% endif %}
+            </td>
+            <td>{{ fb.date_str }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p style="text-align:center;color:#94a3b8;padding:40px 0;">No feedback records found.</p>
+      {% endif %}
+    </div>
+
+    <!-- Footer note -->
+    <div class="report-footer">
+      <span>Student Feedback System &nbsp;·&nbsp; Shobhit University Gangoh (SRE)</span>
+      <span>Report by Koushindra Kumar &nbsp;·&nbsp; B.Tech 2026</span>
+    </div>
+
+    <!-- Print bar (hidden on print) -->
+    <div class="print-bar">
+      <button onclick="window.print()" class="print-btn" id="printBtn">
+        <span>&#x1F4BE;</span> Save as PDF
+      </button>
+      <a href="javascript:history.back()" class="back-btn">
+        &#8592; Back to Dashboard
+      </a>
+    </div>
+
+  </div>
+
+  <script>
+    // Auto-open print dialog after a short delay so the page renders first
+    window.addEventListener('load', function () {
+      setTimeout(function () {
+        window.print();
+      }, 800);
+    });
+  </script>
+
+</body>
+</html>
