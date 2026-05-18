@@ -1,53 +1,93 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student feedback System | Faculty Login</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Faculty Login — Access your Faculty Feedback System dashboard.">
+  <title>Student Feedback System | Faculty Login</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body class="auth-body">
-    <div class="auth-container">
-        <div class="auth-left faculty-gradient">
-            <div class="auth-overlay">
-                <i class="fa-solid fa-chalkboard-user auth-big-icon"></i>
-                <h1>Faculty Login</h1>
-                <p>Review student feedback, send responses, and improve communication professionally.</p>
-            </div>
-        </div>
 
-        <div class="auth-right">
-            <div class="auth-form-box">
-                <h2>Faculty Sign In</h2>
+  <div class="blob blob-1" style="background:radial-gradient(circle,rgba(124,58,237,.2),transparent);"></div>
+  <div class="blob blob-2" style="background:radial-gradient(circle,rgba(236,72,153,.18),transparent);"></div>
 
-                {% with messages = get_flashed_messages(with_categories=true) %}
-                  {% if messages %}
-                    {% for category, message in messages %}
-                      <div class="alert {{ category }}">{{ message }}</div>
-                    {% endfor %}
-                  {% endif %}
-                {% endwith %}
+  <button id="themeToggle" class="theme-btn" aria-label="Toggle dark mode">
+    <i class="fa-solid fa-moon" id="themeIcon"></i>
+    <span id="themeLabel">Dark</span>
+  </button>
 
-                <form method="POST">
-                    <div class="input-group">
-                        <label>Email</label>
-                        <input type="email" name="email" placeholder="Enter faculty email" required>
-                    </div>
+  <div class="auth-container">
 
-                   <div class="password-box">
-                       <input type="password" id="password" name="password" placeholder="Enter password" required>
-                         
-                          </div>
-                          <br>
-
-                    <button type="submit" class="btn full-btn">Login</button>
-                </form>
-
-                <p class="switch-link">New faculty? <a href="{{ url_for('faculty_register') }}">Register here</a></p>
-                <p class="switch-link"><a href="{{ url_for('home') }}">Back to Home</a></p>
-            </div>
-        </div>
+    <div class="auth-left faculty-gradient">
+      <div class="auth-overlay">
+        <i class="fa-solid fa-chalkboard-user auth-big-icon"></i>
+        <h1>Faculty Login</h1>
+        <p>Sign in to review student feedback, send professional responses, and manage your academic communications.</p>
+      </div>
     </div>
+
+    <div class="auth-right">
+      <div class="auth-form-box">
+        <h2>Faculty Sign In</h2>
+        <p class="form-sub">Enter your registered email and password.</p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert {{ category }}" role="alert">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <form method="POST" id="faculty-login-form" novalidate>
+          <div class="input-group">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" name="email"
+                   placeholder="faculty@university.edu" required autocomplete="email">
+          </div>
+
+          <div class="input-group">
+            <label for="password">Password</label>
+            <div class="password-wrapper">
+              <input type="password" id="password" name="password"
+                     placeholder="Enter your password" required autocomplete="current-password">
+              <button type="button" class="toggle-pw" id="togglePw" aria-label="Show password">
+                <i class="fa-regular fa-eye" id="eyeIcon"></i>
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" class="btn full-btn" id="faculty-login-submit">
+            <i class="fa-solid fa-right-to-bracket"></i> Sign In
+          </button>
+        </form>
+
+        <p class="switch-link">New faculty? <a href="{{ url_for('faculty_register') }}" id="go-register">Register here</a></p>
+        <p class="switch-link"><a href="{{ url_for('home') }}" id="go-home"><i class="fa-solid fa-arrow-left" style="font-size:12px;"></i> Back to Home</a></p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function applyTheme(dark) {
+      document.body.classList.toggle('dark-mode', dark);
+      document.getElementById('themeIcon').className = dark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+      document.getElementById('themeLabel').textContent = dark ? 'Light' : 'Dark';
+      localStorage.setItem('sgf-theme', dark ? 'dark' : 'light');
+    }
+    document.getElementById('themeToggle').addEventListener('click', () =>
+      applyTheme(!document.body.classList.contains('dark-mode')));
+    applyTheme(localStorage.getItem('sgf-theme') === 'dark');
+
+    const pw = document.getElementById('password');
+    const ei = document.getElementById('eyeIcon');
+    document.getElementById('togglePw').addEventListener('click', () => {
+      const hidden = pw.type === 'password';
+      pw.type = hidden ? 'text' : 'password';
+      ei.className = hidden ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye';
+    });
+  </script>
 </body>
 </html>
